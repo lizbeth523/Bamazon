@@ -45,4 +45,8 @@ VALUES ("Louis Vuitton Handbag", "Accessories", 1300.00, 3);
 
 SELECT * FROM inventory;
 
+UPDATE inventory
+SET stock_quantity = 250
+WHERE item_id = 1;
+
 
