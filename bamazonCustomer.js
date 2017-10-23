@@ -1,6 +1,8 @@
 var inquirer = require("inquirer");
 var mysql = require("mysql");
+// Array of all item names
 var listOfItemNames;
+// Array of all item id's, names, and quantities
 var listOfItemInfo;
 
 var connection = mysql.createConnection({
@@ -15,7 +17,6 @@ connection.connect( function (error) {
 		throw error;
 	}
 
-	console.log("Connected! Connection id is " + connection.threadId + "\n");
 	displayInventory();
 	goShopping();
 });
@@ -28,7 +29,7 @@ function displayInventory() {
 	for (var i = 0; i < 65; i++) {
 		line += "-";
 	}
-	console.log(header + "\n" + line);
+	console.log("\n" + header + "\n" + line);
 	var query = connection.query("SELECT * FROM inventory", function(err, res) {
 		if (err) {
 			throw err;
@@ -71,41 +72,65 @@ function goShopping() {
 		    })
 		});
 		inquirer.prompt([
-			{
-				type: "list",
-				message: "Which item would you like to buy?",
-				name: "item",
-				choices: listOfItemNames
-			},
-			{
-				type: "input",
-				message: "How many would you like?",
-				name: "quantity",
-				validate: function(value) {
-					if (value.match(/\D/)) {
-						return "Please enter a number ";
-					}
-					else if (value < 1) {
-						return "Quantity to purchase must be at least 1";
-					}
-					else {
-						return true;
-					}
+		{
+			type: "list",
+			message: "Which item would you like to buy?",
+			name: "item",
+			choices: listOfItemNames
+		},
+		{
+			type: "input",
+			message: "How many would you like?",
+			name: "quantity",
+			validate: function(value) {
+				if (value.match(/\D/)) {
+					return "Please enter a number ";
 				}
-			},
-			{
-				type: "confirm",
-				message: "Are you sure?",
-				name: "confirmPurchase"
+				else if (value < 1) {
+					return "Quantity to purchase must be at least 1";
+				}
+				else {
+					return true;
+				}
 			}
+		},
+		{
+			type: "confirm",
+			message: "Are you sure?",
+			name: "confirmPurchase"
+		}
 		]).then(function(answers) {
 			if (answers.confirmPurchase) {
 				placeOrder(answers.item, answers.quantity);
 			}
 			else {
-				console.log("Your purchase has been cancelled");
+				console.log("\nYour purchase has been cancelled\n");
+				optionToContinue();
 			}
 		});
+	});
+}
+
+
+// After the customer has placed an order or had their purchase cancelled due to insufficient inventory, 
+// they get the option to continue shopping or exit
+function optionToContinue() {
+	inquirer.prompt([
+	{
+		type: "list",
+		message: "What would you like to do next?",
+		name: "next",
+		choices: ["Keep shopping", "Exit"]
+	}
+	]).then(function(answers) {
+		if (answers.next === "Keep shopping") {
+			displayInventory();
+			goShopping();
+		}
+		else {
+			console.log("\nThank you for choosing Bamazon for your shopping needs!");
+			connection.end();
+		}
 	});
 }
 
@@ -116,14 +141,13 @@ function placeOrder(item, qty) {
 	var index = listOfItemNames.indexOf(item);
 
 	if (listOfItemInfo[index].quantity >= qty) {
-		console.log("Your order has been placed");
+		console.log("\nYour order has been placed\n");
 		updateInventory(listOfItemInfo[index].id, qty, index);
 	}
 	else {
-		console.log("Insufficient quantity!");
-		connection.end();
-	}
-	
+		console.log("\nInsufficient quantity!\n");
+	}	
+	optionToContinue();
 }
  
 
@@ -147,5 +171,5 @@ function updateInventory(id, qty, index) {
 			}
 		});
 	}
-	connection.end();
+	// connection.end();
 } 
