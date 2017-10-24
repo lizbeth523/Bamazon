@@ -18,6 +18,59 @@ connection.connect( function (error) {
 });
 
 
+// Add a new product to the inventory
+function addNewProduct() {
+	console.log("\nPlease enter the following information for the product that you would like to add:");
+	inquirer.prompt([
+	{
+		type: "input",
+		message: "Product name:",
+		name: "itemName"
+	},
+	{
+		type: "input",
+		message: "Department:",
+		name: "department"
+	},
+	{
+		type: "input",
+		message: "Price:",
+		name: "price",
+		validate: function(value) {
+			if (value.match(/^(([1-9][0-9]{0,2}(,[0-9]{3})*)|[0-9]+)?\.[0-9]{1,2}$/)) {
+				return true;
+			}
+			else {
+				return "The value you have entered is not a valid price.";
+			}
+		}
+	},
+	{
+		type: "input",
+		message: "Quantity:",
+		name: "qtyAdded",
+		validate: validateQuantityAdded
+	},
+	{
+		type: "confirm",
+		message: "Are you sure?",
+		name: "confirmAdd"
+	}
+	]).then( function(answers) {
+		if (answers.confirmAdd) {
+			var query = "INSERT INTO inventory (product_name, department_name, price, stock_quantity) ";
+			query += "VALUES ('" + answers.itemName + "', '" + answers.department + "', " + answers.price + ", " + answers.qtyAdded + ");";
+			updateInventory(query);
+		}
+		else {
+			chooseAction();
+		}
+	});
+}
+// INSERT INTO inventory (product_name, department_name, price, stock_quantity)
+// VALUES ("Louis Vuitton Handbag", "Accessories", 1300.00, 3);
+
+
 // Add more of an item that already exists in inventory
 function addToInventory() {
 	itemNames = [];
@@ -42,17 +95,7 @@ function addToInventory() {
 			type: "input",
 			message: "How many would you like to add?",
 			name: "qtyAdded",
-			validate: function(value) {
-				if (value.match(/\D/)) {
-					return "Please enter a number";
-				}
-				else if (value < 1) {
-					return "Number of items to add must be at least 1";
-				}
-				else {
-					return true;
-				}
-			}
+			validate: validateQuantityAdded
 		},
 		{
 			type: "confirm",
@@ -96,7 +139,7 @@ function chooseAction() {
 				addToInventory();
 				break;
 			case "Add New Product":
-				// need to implement
+				addNewProduct();
 				break;
 			case "Exit":
 				connection.end();
@@ -140,9 +183,34 @@ function displayInventory(queryStatement) {
 }
 
 
+// Update the database
 function updateInventory(queryStatement, queryArray) {
+	// queryStatement = '"' + queryStatement + '"';
 	if (queryArray) {
-		queryStatement += ", " + queryArray;
+		// queryStatement += ", " + queryArray;
+		queryStatement += ", [" + queryArray + "]";
 	}
 	console.log(queryStatement);
+	var query = connection.query(queryStatement, function(err, res) {
+		if (err) {
+			throw err;
+		}
+		console.log("Inventory has been successfully updated\n");
+		chooseAction();
+	});
 }
+
+
+var validateQuantityAdded = function(value) {
+	if (value.match(/\D/)) {
+		return "Please enter a number";
+	}
+	else if (value < 1) {
+		return "Number of items must be at least 1";
+	}
+	else {
+		return true;
+	}
+}
+
+
