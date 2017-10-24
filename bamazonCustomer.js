@@ -1,9 +1,9 @@
 var inquirer = require("inquirer");
 var mysql = require("mysql");
 // Array of all item names
-var listOfItemNames;
+var itemNames;
 // Array of all item id's, names, and quantities
-var listOfItemInfo;
+var itemInfo;
 
 var connection = mysql.createConnection({
   host     : '127.0.0.1',
@@ -61,13 +61,14 @@ function goShopping() {
 		if (err) {
 			throw err;
 		}
-		listOfItemNames = [];
-		listOfItemInfo = [];
+		itemNames = [];
+		itemInfo = [];
 		res.forEach(function(element) {
-		    listOfItemNames.push(element.product_name);
-		    listOfItemInfo.push({
+		    itemNames.push(element.product_name);
+		    itemInfo.push({
 		    	id: element.item_id,
 		    	name: element.product_name,
+		    	price: element.price,
 		    	quantity: element.stock_quantity
 		    })
 		});
@@ -76,7 +77,7 @@ function goShopping() {
 			type: "list",
 			message: "Which item would you like to buy?",
 			name: "item",
-			choices: listOfItemNames
+			choices: itemNames
 		},
 		{
 			type: "input",
@@ -138,11 +139,11 @@ function optionToContinue() {
 // Check to verify sufficient quantity for order. If sufficient qty, order is placed
 // If insufficient quantity, customer is notified that their is insufficient inventory for their order
 function placeOrder(item, qty) {
-	var index = listOfItemNames.indexOf(item);
+	var index = itemNames.indexOf(item);
 
-	if (listOfItemInfo[index].quantity >= qty) {
-		console.log("\nYour order has been placed\n");
-		updateInventory(listOfItemInfo[index].id, qty, index);
+	if (itemInfo[index].quantity >= qty) {
+		console.log("\nYour order has been placed. The total cost is $" + itemInfo[index].price * qty + "\n");
+		updateInventory(itemInfo[index].id, qty, index);
 	}
 	else {
 		console.log("\nInsufficient quantity!\n");
@@ -153,7 +154,7 @@ function placeOrder(item, qty) {
 
 // Update the database to reflect the new stock_quantity after a purchase
 function updateInventory(id, qty, index) {
-	var updatedStockQuantity = listOfItemInfo[index].quantity - qty;
+	var updatedStockQuantity = itemInfo[index].quantity - qty;
 	var queryStatement = "UPDATE inventory SET stock_quantity = ? WHERE item_id = ?";
 	var queryArray = [updatedStockQuantity, id];
 	var query = connection.query(queryStatement, queryArray, function(err, res) {
@@ -171,5 +172,4 @@ function updateInventory(id, qty, index) {
 			}
 		});
 	}
-	// connection.end();
 } 
