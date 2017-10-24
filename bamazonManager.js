@@ -1,5 +1,7 @@
 var inquirer = require("inquirer");
 var mysql = require("mysql");
+var itemNames;
+var itemInfo;
 
 var connection = mysql.createConnection({
   host     : '127.0.0.1',
@@ -16,7 +18,95 @@ connection.connect( function (error) {
 });
 
 
-function displayInventory() {
+// Add more of an item that already exists in inventory
+function addToInventory() {
+	itemNames = [];
+	itemInfo = [];
+	var query = connection.query("SELECT * FROM inventory", function(err, res) {
+		res.forEach( function(element) {
+			itemNames.push(element.product_name);
+			itemInfo.push({
+				id: element.item_id,
+				name: element.product_name,
+				quantity: element.stock_quantity
+			});
+		});
+		inquirer.prompt([
+		{
+			type: "list",
+			message: "Which item would you like to add additional inventory?",
+			name: "itemName",
+			choices: itemNames
+		},
+		{
+			type: "input",
+			message: "How many would you like to add?",
+			name: "qtyAdded",
+			validate: function(value) {
+				if (value.match(/\D/)) {
+					return "Please enter a number";
+				}
+				else if (value < 1) {
+					return "Number of items to add must be at least 1";
+				}
+				else {
+					return true;
+				}
+			}
+		},
+		{
+			type: "confirm",
+			message: "Are you sure?",
+			name: "confirmAdd"
+		}
+		]).then( function(answers) {
+			if (answers.confirmAdd) {
+				var index = itemNames.indexOf(answers.itemName);
+				var newQty = parseInt(itemInfo[index].quantity + parseInt(answers.qtyAdded));
+				var queryStatement = "UPDATE inventory SET stock_quantity = ? WHERE item_id = ?";
+				var queryArray = [newQty, itemInfo[index].id];
+				updateInventory(queryStatement, queryArray);
+			}
+			else {
+				chooseAction();
+			}
+		});
+	});
+}
+
+
+// Get the user's input for what they want to do and call the appropriate function
+function chooseAction() {
+	inquirer.prompt([
+	{
+		type: "list",
+		message: "Choose an option from the list below",
+		name: "action",
+		choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product", "Exit"]
+	}
+	]).then( function(answers) {
+		switch(answers.action) {
+			case "View Products for Sale":
+				displayInventory("SELECT * FROM inventory");
+				break;
+			case "View Low Inventory":
+				displayInventory("SELECT * FROM inventory WHERE stock_quantity < 5");
+				break;
+			case "Add to Inventory":
+				addToInventory();
+				break;
+			case "Add New Product":
+				// need to implement
+				break;
+			case "Exit":
+				connection.end();
+		}
+	});
+}
+
+
+// Displays inventory that is selected from the queryStatement
+function displayInventory(queryStatement) {
 	var header = "Product Name\t\tDepartment Name\tPrice\tQuantity In Stock";
 	// Line of dashes to separate column headers from table contents
 	var line = "";
@@ -24,7 +114,7 @@ function displayInventory() {
 		line += "-";
 	}
 	console.log("\n" + header + "\n" + line);
-	var query = connection.query("SELECT * FROM inventory", function(err, res) {
+	var query = connection.query(queryStatement, function(err, res) {
 		if (err) {
 			throw err;
 		}
@@ -50,27 +140,9 @@ function displayInventory() {
 }
 
 
-function chooseAction() {
-	inquirer.prompt([
-	{
-		type: "list",
-		message: "Choose an option from the list below",
-		name: "action",
-		choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product", "Exit"]
+function updateInventory(queryStatement, queryArray) {
+	if (queryArray) {
+		queryStatement += ", " + queryArray;
 	}
-	]).then( function(answers) {
-		switch(answers.action) {
-			case "View Products for Sale":
-				displayInventory();
-				break;
-			case "View Low Inventory":
-				// need to implement
-				break;
-			case "Add to Inventory":
-				// need to implement
-				break;
-			case "Exit":
-				connection.end();
-		}
-	});
+	console.log(queryStatement);
 }
