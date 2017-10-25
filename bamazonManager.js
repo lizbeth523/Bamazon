@@ -61,7 +61,7 @@ function addNewProduct() {
 		if (answers.confirmAdd) {
 			var query = "INSERT INTO inventory (product_name, department_name, price, stock_quantity) ";
 			query += "VALUES ('" + answers.itemName + "', '" + answers.department + "', " + answers.price + ", " + answers.qtyAdded + ");";
-			updateInventory(query);
+			updateDatabase(query);
 		}
 		else {
 			chooseAction();
@@ -107,7 +107,7 @@ function addToInventory() {
 				var newQty = parseInt(itemInfo[index].quantity + parseInt(answers.qtyAdded));
 				var queryStatement = "UPDATE inventory SET stock_quantity = ? WHERE item_id = ?";
 				var queryArray = [newQty, itemInfo[index].id];
-				updateInventory(queryStatement, queryArray);
+				updateDatabase(queryStatement, queryArray);
 			}
 			else {
 				chooseAction();
@@ -162,7 +162,7 @@ function displayInventory(queryStatement) {
 
 
 // Update the database
-function updateInventory(queryStatement, queryArray) {
+function updateDatabase(queryStatement, queryArray) {
 	var query = connection.query(queryStatement, queryArray, function(err, res) {
 		if (err) {
 			throw err;
