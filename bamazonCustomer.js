@@ -157,6 +157,7 @@ function updateInventory(id, qty, index) {
 	var updatedStockQuantity = itemInfo[index].quantity - qty;
 	var queryStatement = "UPDATE inventory SET stock_quantity = ? WHERE item_id = ?";
 	var queryArray = [updatedStockQuantity, id];
+	console.log(queryStatement + ", " + queryArray);
 	var query = connection.query(queryStatement, queryArray, function(err, res) {
 		if (err) {
 			throw err;

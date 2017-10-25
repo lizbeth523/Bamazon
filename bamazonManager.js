@@ -1,3 +1,4 @@
+var ct = require("console.table");
 var inquirer = require("inquirer");
 var mysql = require("mysql");
 var itemNames;
@@ -37,7 +38,7 @@ function addNewProduct() {
 		message: "Price:",
 		name: "price",
 		validate: function(value) {
-			if (value.match(/^(([1-9][0-9]{0,2}(,[0-9]{3})*)|[0-9]+)?\.[0-9]{1,2}$/)) {
+			if (value.match(/^[0-9]*\.[0-9]{2}$/)) {
 				return true;
 			}
 			else {
@@ -67,8 +68,6 @@ function addNewProduct() {
 		}
 	});
 }
-// INSERT INTO inventory (product_name, department_name, price, stock_quantity)
-// VALUES ("Louis Vuitton Handbag", "Accessories", 1300.00, 3);
 
 
 // Add more of an item that already exists in inventory
@@ -185,13 +184,7 @@ function displayInventory(queryStatement) {
 
 // Update the database
 function updateInventory(queryStatement, queryArray) {
-	// queryStatement = '"' + queryStatement + '"';
-	if (queryArray) {
-		// queryStatement += ", " + queryArray;
-		queryStatement += ", [" + queryArray + "]";
-	}
-	console.log(queryStatement);
-	var query = connection.query(queryStatement, function(err, res) {
+	var query = connection.query(queryStatement, queryArray, function(err, res) {
 		if (err) {
 			throw err;
 		}
