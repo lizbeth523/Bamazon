@@ -141,6 +141,7 @@ function chooseAction() {
 				addNewProduct();
 				break;
 			case "Exit":
+				console.log("Goodbye!");
 				connection.end();
 		}
 	});
@@ -173,6 +174,7 @@ function updateDatabase(queryStatement, queryArray) {
 }
 
 
+// Verify that the  value is an integer >= 1
 var validateQuantityAdded = function(value) {
 	if (value.match(/\D/)) {
 		return "Please enter a number";
