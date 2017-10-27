@@ -38,7 +38,7 @@ bamazonManager
 
   	$ node bamazonManager.js
 
-* Select what you would like to do from the following list using the arrow keys, and then press enter
+* Select what you would like to do from the list using the arrow keys and press enter
 	+ View Products for Sale
 		Displays all items in inventory
 	+ View Low Inventory
