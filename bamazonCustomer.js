@@ -122,7 +122,7 @@ function placeOrder(item, qty) {
 	var index = itemNames.indexOf(item);
 
 	if (itemInfo[index].quantity >= qty) {
-		console.log("\nYour order has been placed. The total cost is $" + itemInfo[index].price * qty + "\n");
+		console.log("\nYour order has been placed. The total cost is $" + Number(itemInfo[index].price * qty).toFixed(2) + "\n");
 		updateInventory(itemInfo[index].id, qty, index);
 	}
 	else {
@@ -133,11 +133,11 @@ function placeOrder(item, qty) {
  
 
 // Update the database to reflect the new stock_quantity after a purchase
-function updateInventory(id, qty, index) {
-	var updatedStockQuantity = itemInfo[index].quantity - qty;
+function updateInventory(id, qtyPurchased, index) {
+	var updatedStockQuantity = itemInfo[index].quantity - qtyPurchased;
 	var queryStatement = "UPDATE inventory SET stock_quantity = ? WHERE item_id = ?";
 	var queryArray = [updatedStockQuantity, id];
-	console.log(queryStatement + ", " + queryArray);
+	
 	var query = connection.query(queryStatement, queryArray, function(err, res) {
 		if (err) {
 			throw err;
